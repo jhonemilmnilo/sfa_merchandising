@@ -1,37 +1,129 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:sfa_merchandising/pages/loginPage.dart';
+import "package:flutter/material.dart";
+import "package:go_router/go_router.dart";
+
+import "package:sfa_merchandising/pages/loginPage.dart";
+import "package:sfa_merchandising/pages/dashboard_page.dart";
+import "package:sfa_merchandising/pages/my_day_page.dart";
+import "package:sfa_merchandising/pages/report_page.dart";
 
 /// GoRouter configuration for app navigation
-///
-/// This uses go_router for declarative routing, which provides:
-/// - Type-safe navigation
-/// - Deep linking support (web URLs, app links)
-/// - Easy route parameters
-/// - Navigation guards and redirects
-///
-/// To add a new route:
-/// 1. Add a route constant to AppRoutes below
-/// 2. Add a GoRoute to the routes list
-/// 3. Navigate using context.go() or context.push()
-/// 4. Use context.pop() to go back.
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: AppRoutes.login,
     routes: [
+      // -------------------------------------------------------------------
+      // START: Login Route
+      // -------------------------------------------------------------------
       GoRoute(
         path: AppRoutes.login,
-        name: 'login',
-        pageBuilder: (context, state) => NoTransitionPage(
-          child: const LoginPage(),
+        name: "login",
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: LoginPage(),
         ),
       ),
+      // -------------------------------------------------------------------
+      // END: Login Route
+      // -------------------------------------------------------------------
+
+      // -------------------------------------------------------------------
+      // START: Dashboard Route
+      // -------------------------------------------------------------------
+      GoRoute(
+        path: AppRoutes.dashboard,
+        name: "dashboard",
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: DashboardPage(),
+        ),
+      ),
+      // -------------------------------------------------------------------
+      // END: Dashboard Route
+      // -------------------------------------------------------------------
+
+      // -------------------------------------------------------------------
+      // START: My Day Route
+      // -------------------------------------------------------------------
+      GoRoute(
+        path: AppRoutes.myDay,
+        name: "myDay",
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: MyDayPage(),
+        ),
+      ),
+      // -------------------------------------------------------------------
+      // END: My Day Route
+      // -------------------------------------------------------------------
+
+      // -------------------------------------------------------------------
+      // START: Sales History Route (placeholder for now)
+      // -------------------------------------------------------------------
+      GoRoute(
+        path: AppRoutes.salesHistory,
+        name: "salesHistory",
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: _PlaceholderPage(title: "Sales History"),
+        ),
+      ),
+      // -------------------------------------------------------------------
+      // END: Sales History Route
+      // -------------------------------------------------------------------
+
+      // -------------------------------------------------------------------
+      // START: Reports Route (real page)
+      // -------------------------------------------------------------------
+      GoRoute(
+        path: AppRoutes.reports,
+        name: "reports",
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: ReportPage(),
+        ),
+      ),
+      // -------------------------------------------------------------------
+      // END: Reports Route
+      // -------------------------------------------------------------------
     ],
   );
 }
 
 /// Route path constants
-/// Use these instead of hard-coding route strings
 class AppRoutes {
-  static const String login = '/';
+  static const String login = "/";
+  static const String dashboard = "/dashboard";
+
+  // Bottom nav
+  static const String myDay = "/my-day";
+  static const String salesHistory = "/sales-history";
+  static const String reports = "/reports";
+
+  // Future routes (referenced by dashboard quick actions)
+  static const String newOrder = "/orders/new";
+  static const String newTask = "/tasks/new";
+  static const String camera = "/camera";
+  static const String customers = "/customers";
+  static const String audit = "/audit";
+  static const String profile = "/profile";
+  static const String menu = "/menu";
+}
+
+/// Simple placeholder page for routes not built yet.
+class _PlaceholderPage extends StatelessWidget {
+  final String title;
+
+  const _PlaceholderPage({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Center(
+        child: Text(
+          "$title (Coming soon)",
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
 }

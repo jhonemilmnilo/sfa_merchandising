@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sfa_merchandising/theme.dart';
 
 /// Modern, professional login page with elegant design
@@ -9,7 +10,8 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -40,15 +42,31 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   Future<void> _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-      await Future.delayed(const Duration(seconds: 2));
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login functionality not yet implemented')),
-        );
-      }
+    final form = _formKey.currentState;
+    if (form == null) return;
+
+    // Close keyboard
+    FocusScope.of(context).unfocus();
+
+    if (!form.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Static/mock login for now
+      await Future.delayed(const Duration(seconds: 1));
+
+      if (!mounted) return;
+
+      // Redirect to dashboard (clears login from back stack)
+      context.go("/dashboard");
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Login failed: $e")),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -92,10 +110,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [
-                const Color(0xFF667EEA),
-                const Color(0xFF764BA2),
+                Color(0xFF667EEA),
+                Color(0xFF764BA2),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -148,12 +166,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             colorScheme: colorScheme,
             isDark: isDark,
             validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!value.contains('@')) {
-                return 'Please enter a valid email';
-              }
+              if (value == null || value.isEmpty) return 'Please enter your email';
+              if (!value.contains('@')) return 'Please enter a valid email';
               return null;
             },
           ),
@@ -168,12 +182,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             colorScheme: colorScheme,
             isDark: isDark,
             validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your password';
-              }
-              if (value.length < 6) {
-                return 'Password must be at least 6 characters';
-              }
+              if (value == null || value.isEmpty) return 'Please enter your password';
+              if (value.length < 6) return 'Password must be at least 6 characters';
               return null;
             },
           ),

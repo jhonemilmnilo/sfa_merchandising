@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:go_router/go_router.dart";
+import "package:sfa_merchandising/widgets/app_bottom_nav.dart";
 import "../theme.dart";
 
 class ReportPage extends StatefulWidget {
@@ -326,46 +326,9 @@ class _ReportPageState extends State<ReportPage> {
       ),
 
       // ---------------------------------------------------------------------
-      // START: Bottom Navigation (consistent with other pages)
+      // START: Bottom Navigation (shared widget)
       // ---------------------------------------------------------------------
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: 3,
-        height: 72,
-        onDestinationSelected: (index) {
-          switch (index) {
-            case 0:
-              _safeGo(context, "/dashboard");
-              break;
-            case 1:
-              _safeGo(context, "/my-day");
-              break;
-            case 2:
-              _safeGo(context, "/sales-history");
-              break;
-            case 3:
-              _safeGo(context, "/reports");
-              break;
-          }
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.grid_view_rounded),
-            label: "Dashboard",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_month_rounded),
-            label: "My Day",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.group_rounded),
-            label: "Sales History",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.bar_chart_rounded),
-            label: "Reports",
-          ),
-        ],
-      ),
+      bottomNavigationBar: const AppBottomNav(),
       // ---------------------------------------------------------------------
       // END: Bottom Navigation
       // ---------------------------------------------------------------------
@@ -391,14 +354,6 @@ class _ReportPageState extends State<ReportPage> {
 
     // UI-first: clear input
     _soldCtrl.clear();
-  }
-
-  static void _safeGo(BuildContext context, String path) {
-    try {
-      context.go(path);
-    } catch (_) {
-      // Routes might not be registered yet during UI-first phase.
-    }
   }
 }
 

@@ -5,6 +5,7 @@ import "package:sfa_merchandising/pages/loginPage.dart";
 import "package:sfa_merchandising/pages/dashboard_page.dart";
 import "package:sfa_merchandising/pages/my_day_page.dart";
 import "package:sfa_merchandising/pages/report_page.dart";
+import "package:sfa_merchandising/pages/calendar_page.dart";
 
 /// GoRouter configuration for app navigation
 class AppRouter {
@@ -54,17 +55,17 @@ class AppRouter {
       // -------------------------------------------------------------------
 
       // -------------------------------------------------------------------
-      // START: Sales History Route (placeholder for now)
+      // START: Calendar Route (replaces Sales History)
       // -------------------------------------------------------------------
       GoRoute(
-        path: AppRoutes.salesHistory,
-        name: "salesHistory",
+        path: AppRoutes.calendar,
+        name: "calendar",
         pageBuilder: (context, state) => const NoTransitionPage(
-          child: _PlaceholderPage(title: "Sales History"),
+          child: CalendarPage(),
         ),
       ),
       // -------------------------------------------------------------------
-      // END: Sales History Route
+      // END: Calendar Route
       // -------------------------------------------------------------------
 
       // -------------------------------------------------------------------
@@ -91,7 +92,7 @@ class AppRoutes {
 
   // Bottom nav
   static const String myDay = "/my-day";
-  static const String salesHistory = "/sales-history";
+  static const String calendar = "/calendar";
   static const String reports = "/reports";
 
   // Future routes (referenced by dashboard quick actions)

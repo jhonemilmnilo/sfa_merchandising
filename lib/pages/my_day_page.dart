@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:go_router/go_router.dart";
+import "package:sfa_merchandising/widgets/app_bottom_nav.dart";
 import "../theme.dart";
 
 class MyDayPage extends StatelessWidget {
@@ -108,58 +108,13 @@ class MyDayPage extends StatelessWidget {
       ),
 
       // ---------------------------------------------------------------------
-      // START: Bottom Navigation
+      // START: Bottom Navigation (shared widget)
       // ---------------------------------------------------------------------
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: 1,
-        height: 72,
-        onDestinationSelected: (index) {
-          switch (index) {
-            case 0:
-              _safeGo(context, "/dashboard");
-              break;
-            case 1:
-              _safeGo(context, "/my-day");
-              break;
-            case 2:
-              _safeGo(context, "/sales-history");
-              break;
-            case 3:
-              _safeGo(context, "/reports");
-              break;
-          }
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.grid_view_rounded),
-            label: "Dashboard",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_month_rounded),
-            label: "My Day",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.group_rounded),
-            label: "Sales History",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.bar_chart_rounded),
-            label: "Reports",
-          ),
-        ],
-      ),
+      bottomNavigationBar: const AppBottomNav(),
       // ---------------------------------------------------------------------
       // END: Bottom Navigation
       // ---------------------------------------------------------------------
     );
-  }
-
-  static void _safeGo(BuildContext context, String path) {
-    try {
-      context.go(path);
-    } catch (_) {
-      // Routes might not be registered yet during UI-first phase.
-    }
   }
 }
 
@@ -379,7 +334,9 @@ class _TaskCardState extends State<_TaskCard> {
                   ? () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text("Submitted: ${widget.task.taskName} (static UI)"),
+                          content: Text(
+                            "Submitted: ${widget.task.taskName} (static UI)",
+                          ),
                         ),
                       );
                     }

@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
-import "package:go_router/go_router.dart";
 
+import "package:sfa_merchandising/widgets/app_bottom_nav.dart";
 import "../theme.dart";
 
 class DashboardPage extends StatelessWidget {
@@ -168,21 +168,27 @@ class DashboardPage extends StatelessWidget {
                             label: "New Order",
                             icon: Icons.shopping_cart_rounded,
                             iconColor: const Color(0xFFE07DA0),
-                            onTap: () => _safeGo(context, "/orders/new"),
+                            onTap: () {
+                              // TODO: route later (static UI phase)
+                            },
                           ),
                           _QuickActionTile(
                             background: _limeCard,
                             label: "New Task",
                             icon: Icons.check_circle_rounded,
                             iconColor: const Color(0xFFB80F0A),
-                            onTap: () => _safeGo(context, "/tasks/new"),
+                            onTap: () {
+                              // TODO: route later (static UI phase)
+                            },
                           ),
                           _QuickActionTile(
                             background: _limeCard,
                             label: "Take Photo",
                             icon: Icons.photo_camera_rounded,
                             iconColor: cs.onSurface,
-                            onTap: () => _safeGo(context, "/camera"),
+                            onTap: () {
+                              // TODO: route later (static UI phase)
+                            },
                           ),
                         ];
 
@@ -222,55 +228,14 @@ class DashboardPage extends StatelessWidget {
         ),
       ),
 
-      // Bottom navigation (matches screenshot)
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: 0,
-        height: 72,
-        onDestinationSelected: (index) {
-          switch (index) {
-            case 0:
-              _safeGo(context, "/dashboard");
-              break;
-            case 1:
-              _safeGo(context, "/my-day");
-              break;
-            case 2:
-              _safeGo(context, "/sales-history");
-              break;
-            case 3:
-              _safeGo(context, "/reports");
-              break;
-          }
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.grid_view_rounded),
-            label: "Dashboard",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_month_rounded),
-            label: "My Day",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.group_rounded),
-            label: "Sales History",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.bar_chart_rounded),
-            label: "Reports",
-          ),
-        ],
-      ),
+      // ---------------------------------------------------------------------
+      // START: Bottom Navigation (shared widget)
+      // ---------------------------------------------------------------------
+      bottomNavigationBar: const AppBottomNav(),
+      // ---------------------------------------------------------------------
+      // END: Bottom Navigation
+      // ---------------------------------------------------------------------
     );
-  }
-
-  /// Avoid crashing when routes are not yet registered.
-  static void _safeGo(BuildContext context, String path) {
-    try {
-      context.go(path);
-    } catch (_) {
-      // If GoRouter route isn't defined yet, do nothing for now (UI-first phase).
-    }
   }
 }
 

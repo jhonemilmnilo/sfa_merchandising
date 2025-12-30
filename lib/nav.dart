@@ -6,6 +6,7 @@ import "package:sfa_merchandising/pages/dashboard_page.dart";
 import "package:sfa_merchandising/pages/my_day_page.dart";
 import "package:sfa_merchandising/pages/report_page.dart";
 import "package:sfa_merchandising/pages/calendar_page.dart";
+import "package:sfa_merchandising/pages/profile_page.dart";
 
 /// GoRouter configuration for app navigation
 class AppRouter {
@@ -55,7 +56,7 @@ class AppRouter {
       // -------------------------------------------------------------------
 
       // -------------------------------------------------------------------
-      // START: Calendar Route (replaces Sales History)
+      // START: Calendar Route (Bottom Nav)
       // -------------------------------------------------------------------
       GoRoute(
         path: AppRoutes.calendar,
@@ -69,7 +70,7 @@ class AppRouter {
       // -------------------------------------------------------------------
 
       // -------------------------------------------------------------------
-      // START: Reports Route (real page)
+      // START: Reports Route (Bottom Nav)
       // -------------------------------------------------------------------
       GoRoute(
         path: AppRoutes.reports,
@@ -81,6 +82,83 @@ class AppRouter {
       // -------------------------------------------------------------------
       // END: Reports Route
       // -------------------------------------------------------------------
+
+      // -------------------------------------------------------------------
+      // START: Drawer Routes (Static placeholders for now)
+      // -------------------------------------------------------------------
+      GoRoute(
+        path: AppRoutes.profile,
+        name: "profile",
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: ProfilePage(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.salesHistory,
+        name: "salesHistory",
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: _PlaceholderPage(title: "Sales History"),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.weeklySheet,
+        name: "weeklySheet",
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: _PlaceholderPage(title: "Weekly Sheet"),
+        ),
+      ),
+      // -------------------------------------------------------------------
+      // END: Drawer Routes
+      // -------------------------------------------------------------------
+
+      // -------------------------------------------------------------------
+      // START: Future Routes (placeholders so navigation won't crash)
+      // -------------------------------------------------------------------
+      GoRoute(
+        path: AppRoutes.newOrder,
+        name: "newOrder",
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: _PlaceholderPage(title: "New Order"),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.newTask,
+        name: "newTask",
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: _PlaceholderPage(title: "New Task"),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.camera,
+        name: "camera",
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: _PlaceholderPage(title: "Camera"),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.customers,
+        name: "customers",
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: _PlaceholderPage(title: "Customers"),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.audit,
+        name: "audit",
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: _PlaceholderPage(title: "Audit"),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.menu,
+        name: "menu",
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: _PlaceholderPage(title: "Menu"),
+        ),
+      ),
+      // -------------------------------------------------------------------
+      // END: Future Routes
+      // -------------------------------------------------------------------
     ],
   );
 }
@@ -90,10 +168,15 @@ class AppRoutes {
   static const String login = "/";
   static const String dashboard = "/dashboard";
 
-  // Bottom nav
+  // Bottom nav pages
   static const String myDay = "/my-day";
   static const String calendar = "/calendar";
   static const String reports = "/reports";
+
+  // Drawer pages
+  static const String profile = "/profile";
+  static const String salesHistory = "/sales-history";
+  static const String weeklySheet = "/weekly-sheet";
 
   // Future routes (referenced by dashboard quick actions)
   static const String newOrder = "/orders/new";
@@ -101,8 +184,12 @@ class AppRoutes {
   static const String camera = "/camera";
   static const String customers = "/customers";
   static const String audit = "/audit";
-  static const String profile = "/profile";
   static const String menu = "/menu";
+
+  static const String weeklyReports = "/weekly-reports";
+static const String sales = "/sales";
+static const String callSheet = "/call-sheet";
+
 }
 
 /// Simple placeholder page for routes not built yet.

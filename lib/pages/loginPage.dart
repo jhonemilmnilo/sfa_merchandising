@@ -1,98 +1,147 @@
+// Imports the core Flutter Material library (widgets, themes, scaffolds, etc.)
 import 'package:flutter/material.dart';
+
+// Imports GoRouter for declarative navigation and route management
 import 'package:go_router/go_router.dart';
+
+// Imports your app-wide theme constants (spacing, colors, typography)
 import 'package:sfa_merchandising/theme.dart';
 
 /// Modern, professional login page with elegant design
+/// Uses animations, form validation, and clean UI architecture
 class LoginPage extends StatefulWidget {
+  // Constructor with optional key for widget tree optimization
   const LoginPage({super.key});
 
+  // Creates the mutable state associated with this widget
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
+// State class handles UI logic, animations, and form state
 class _LoginPageState extends State<LoginPage>
+    // Needed for AnimationController (provides vsync)
     with SingleTickerProviderStateMixin {
+
+  // Global key used to validate and save the form state
   final _formKey = GlobalKey<FormState>();
+
+  // Controller for reading and modifying email input
   final _emailController = TextEditingController();
+
+  // Controller for reading and modifying password input
   final _passwordController = TextEditingController();
+
+  // Toggles password visibility (eye icon)
   bool _isPasswordVisible = false;
+
+  // Controls loading spinner and disables button during login
   bool _isLoading = false;
+
+  // Controls animation lifecycle (start, stop, dispose)
   late AnimationController _animationController;
+
+  // Fade animation for smooth page entrance
   late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
+
+    // Initializes animation controller with duration
     _animationController = AnimationController(
-      vsync: this,
+      vsync: this, // Prevents offscreen animations (performance optimization)
       duration: const Duration(milliseconds: 800),
     );
+
+    // Creates a fade animation from 0 (transparent) to 1 (fully visible)
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      // Adds easing curve for natural animation feel
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+
+    // Starts the animation when page loads
     _animationController.forward();
   }
 
   @override
   void dispose() {
+    // Always dispose controllers to prevent memory leaks
     _emailController.dispose();
     _passwordController.dispose();
     _animationController.dispose();
+
     super.dispose();
   }
 
+  // Handles login logic and validation
   Future<void> _handleLogin() async {
+    // Gets the current form state
     final form = _formKey.currentState;
+
+    // Safety check: form might not be mounted
     if (form == null) return;
 
-    // Close keyboard
+    // Dismisses keyboard when user submits
     FocusScope.of(context).unfocus();
 
+    // Stops execution if validation fails
     if (!form.validate()) return;
 
+    // Shows loading indicator
     setState(() => _isLoading = true);
 
     try {
-      // Static/mock login for now
+      // Simulated login delay (replace with API call later)
       await Future.delayed(const Duration(seconds: 1));
 
+      // Prevents navigation if widget is already disposed
       if (!mounted) return;
 
-      // Redirect to dashboard (clears login from back stack)
+      // Navigates to dashboard and clears login from back stack
       context.go("/dashboard");
     } catch (e) {
+      // Safety check again before showing UI feedback
       if (!mounted) return;
+
+      // Displays error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Login failed: $e")),
       );
     } finally {
+      // Ensures loading state is reset
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Accesses current theme data
     final theme = Theme.of(context);
+
+    // Extracts color scheme for consistent colors
     final colorScheme = theme.colorScheme;
+
+    // Detects dark mode for adaptive styling
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      body: SafeArea(
+      body: SafeArea( // Prevents overlap with system UI
         child: Center(
-          child: SingleChildScrollView(
+          child: SingleChildScrollView( // Prevents overflow on small screens
             child: Padding(
-              padding: AppSpacing.paddingLg,
+              padding: AppSpacing.paddingLg, // Consistent spacing from theme
               child: FadeTransition(
-                opacity: _fadeAnimation,
+                opacity: _fadeAnimation, // Applies fade-in animation
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildHeader(theme),
+                    _buildHeader(theme), // Logo + title
                     const SizedBox(height: 48),
-                    _buildLoginForm(theme, colorScheme, isDark),
+                    _buildLoginForm(theme, colorScheme, isDark), // Inputs
                     const SizedBox(height: 24),
-                    _buildLoginButton(theme, colorScheme),
+                    _buildLoginButton(theme, colorScheme), // CTA button
                   ],
                 ),
               ),
@@ -103,6 +152,7 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
+  // Builds the top branding section
   Widget _buildHeader(ThemeData theme) {
     return Column(
       children: [
@@ -110,6 +160,7 @@ class _LoginPageState extends State<LoginPage>
           width: 80,
           height: 80,
           decoration: BoxDecoration(
+            // Gradient gives modern premium feel
             gradient: const LinearGradient(
               colors: [
                 Color(0xFF667EEA),
@@ -118,7 +169,9 @@ class _LoginPageState extends State<LoginPage>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+            // Rounded corners
             borderRadius: BorderRadius.circular(20),
+            // Soft shadow for depth
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF667EEA).withValues(alpha: 0.3),
@@ -127,9 +180,12 @@ class _LoginPageState extends State<LoginPage>
               ),
             ],
           ),
+          // Lock icon symbolizes authentication
           child: const Icon(Icons.lock_outline, size: 40, color: Colors.white),
         ),
         const SizedBox(height: 24),
+
+        // Main headline
         Text(
           'Welcome Back',
           textAlign: TextAlign.center,
@@ -138,7 +194,10 @@ class _LoginPageState extends State<LoginPage>
             letterSpacing: -0.5,
           ),
         ),
+
         const SizedBox(height: 8),
+
+        // Subtitle
         Text(
           'Sign in to continue',
           textAlign: TextAlign.center,
@@ -151,11 +210,14 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
-  Widget _buildLoginForm(ThemeData theme, ColorScheme colorScheme, bool isDark) {
+  // Builds the login form
+  Widget _buildLoginForm(
+      ThemeData theme, ColorScheme colorScheme, bool isDark) {
     return Form(
-      key: _formKey,
+      key: _formKey, // Connects form to validation logic
       child: Column(
         children: [
+          // Email input
           _buildTextField(
             controller: _emailController,
             label: 'Email',
@@ -171,7 +233,10 @@ class _LoginPageState extends State<LoginPage>
               return null;
             },
           ),
+
           const SizedBox(height: 20),
+
+          // Password input
           _buildTextField(
             controller: _passwordController,
             label: 'Password',
@@ -187,11 +252,14 @@ class _LoginPageState extends State<LoginPage>
               return null;
             },
           ),
+
           const SizedBox(height: 12),
+
+          // Forgot password action
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: () {},
+              onPressed: () {}, // TODO: implement reset flow
               style: TextButton.styleFrom(
                 foregroundColor: const Color(0xFF667EEA),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -209,6 +277,7 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
+  // Reusable styled text field widget
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -224,33 +293,46 @@ class _LoginPageState extends State<LoginPage>
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      obscureText: isPassword && !_isPasswordVisible,
+      obscureText: isPassword && !_isPasswordVisible, // Password masking
       validator: validator,
       style: theme.textTheme.bodyLarge,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
+
+        // Leading icon
         prefixIcon: Icon(icon, size: 22, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+
+        // Password visibility toggle
         suffixIcon: isPassword
             ? IconButton(
                 icon: Icon(
-                  _isPasswordVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  _isPasswordVisible
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
                   size: 22,
                   color: colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
-                onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                onPressed: () =>
+                    setState(() => _isPasswordVisible = !_isPasswordVisible),
               )
             : null,
+
+        // Text styles
         labelStyle: theme.textTheme.bodyMedium?.copyWith(
           color: colorScheme.onSurface.withValues(alpha: 0.6),
         ),
         hintStyle: theme.textTheme.bodyMedium?.copyWith(
           color: colorScheme.onSurface.withValues(alpha: 0.4),
         ),
+
+        // Background fill
         filled: true,
         fillColor: isDark
             ? colorScheme.surface.withValues(alpha: 0.3)
             : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+
+        // Borders for all states
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
@@ -283,16 +365,20 @@ class _LoginPageState extends State<LoginPage>
             width: 2,
           ),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+
+        // Inner spacing
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       ),
     );
   }
 
+  // Builds the login button
   Widget _buildLoginButton(ThemeData theme, ColorScheme colorScheme) {
     return SizedBox(
       height: 56,
       child: ElevatedButton(
-        onPressed: _isLoading ? null : _handleLogin,
+        onPressed: _isLoading ? null : _handleLogin, // Disable when loading
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF667EEA),
           foregroundColor: Colors.white,
@@ -304,6 +390,7 @@ class _LoginPageState extends State<LoginPage>
           ),
         ),
         child: _isLoading
+            // Loading spinner
             ? const SizedBox(
                 height: 24,
                 width: 24,
@@ -312,6 +399,7 @@ class _LoginPageState extends State<LoginPage>
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
+            // Button label
             : Text(
                 'Sign In',
                 style: theme.textTheme.titleMedium?.copyWith(

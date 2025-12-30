@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 
 import "package:sfa_merchandising/widgets/app_bottom_nav.dart";
+import "package:sfa_merchandising/widgets/app_drawer.dart"; // ✅ new shared drawer
 import "../theme.dart";
 
 class DashboardPage extends StatelessWidget {
@@ -26,6 +27,15 @@ class DashboardPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: cs.background,
+
+      // ---------------------------------------------------------------------
+      // START: App Drawer (shared sidebar)
+      // ---------------------------------------------------------------------
+      drawer: const AppDrawer(),
+      // ---------------------------------------------------------------------
+      // END: App Drawer
+      // ---------------------------------------------------------------------
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(
@@ -37,36 +47,54 @@ class DashboardPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top bar (menu + small label + bell)
-              Row(
-                children: [
-                  _IconChip(
-                    onTap: () {
-                      // TODO: open drawer/menu
-                    },
-                    icon: Icons.menu_rounded,
-                    iconColor: const Color(0xFFE07DA0), // subtle pink like screenshot
-                    background: cs.surface,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    "Dashboard",
-                    style: context.textStyles.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: cs.onSurface,
-                    ),
-                  ),
-                  const Spacer(),
-                  _IconChip(
-                    onTap: () {
-                      // TODO: notifications page
-                    },
-                    icon: Icons.notifications_none_rounded,
-                    iconColor: cs.onSurface,
-                    background: cs.surface,
-                  ),
-                ],
+              // -----------------------------------------------------------------
+              // START: Top Bar (hamburger + page label + refresh/sync)
+              // IMPORTANT: Builder ensures the context has access to Scaffold
+              // -----------------------------------------------------------------
+              Builder(
+                builder: (ctx) {
+                  return Row(
+                    children: [
+                      _IconChip(
+                        onTap: () {
+                          // ✅ Open the drawer
+                          Scaffold.of(ctx).openDrawer();
+                        },
+                        icon: Icons.menu_rounded,
+                        iconColor: const Color(
+                            0xFFE07DA0), // subtle pink like screenshot
+                        background: cs.surface,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        "Dashboard",
+                        style: context.textStyles.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: cs.onSurface,
+                        ),
+                      ),
+                      const Spacer(),
+
+                      // ✅ Replaced notifications with refresh/sync button
+                      _IconChip(
+                        onTap: () {
+                          // TODO: trigger sync later (offline-first)
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Sync started (static UI)")),
+                          );
+                        },
+                        icon: Icons.sync_rounded,
+                        iconColor: cs.onSurface,
+                        background: cs.surface,
+                      ),
+                    ],
+                  );
+                },
               ),
+              // -----------------------------------------------------------------
+              // END: Top Bar
+              // -----------------------------------------------------------------
 
               const SizedBox(height: AppSpacing.sm),
 
@@ -156,7 +184,6 @@ class DashboardPage extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.md),
-
                     LayoutBuilder(
                       builder: (context, constraints) {
                         // For very small widths, wrap. Otherwise keep 3 across.
@@ -199,7 +226,9 @@ class DashboardPage extends StatelessWidget {
                             children: tiles
                                 .map(
                                   (t) => SizedBox(
-                                    width: (constraints.maxWidth - AppSpacing.md) / 2,
+                                    width:
+                                        (constraints.maxWidth - AppSpacing.md) /
+                                            2,
                                     child: t,
                                   ),
                                 )

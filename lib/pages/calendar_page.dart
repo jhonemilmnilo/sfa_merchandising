@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:sfa_merchandising/widgets/app_bottom_nav.dart";
+import "package:sfa_merchandising/widgets/app_drawer.dart"; // ✅ new shared drawer
 import "../theme.dart";
 
 class CalendarPage extends StatefulWidget {
@@ -64,20 +65,30 @@ class _CalendarPageState extends State<CalendarPage> {
 
     return Scaffold(
       backgroundColor: cs.background,
-
+drawer: const AppDrawer(),
       // ---------------------------------------------------------------------
       // START: App Bar (Calendar)
       // ---------------------------------------------------------------------
-      appBar: AppBar(
-        title: const Text("Calendar"),
-        leading: IconButton(
-          icon: const Icon(Icons.menu_rounded),
-          onPressed: () {
-            // TODO: open drawer/menu later
-          },
-        ),
-      ),
-      // ---------------------------------------------------------------------
+  appBar: AppBar(
+  title: const Text("Calendar"),
+  leading: Builder(
+    builder: (ctx) => IconButton(
+      icon: const Icon(Icons.menu_rounded),
+      onPressed: () => Scaffold.of(ctx).openDrawer(),
+    ),
+  ),
+  actions: [
+    IconButton(
+      tooltip: "Sync",
+      icon: const Icon(Icons.sync_rounded),
+      onPressed: () {
+        // TODO: trigger offline-first sync (upload pending changes, then pull latest)
+        // Example (later): context.read(syncControllerProvider).sync();
+      },
+    ),
+  ],
+),
+
       // END: App Bar
       // ---------------------------------------------------------------------
 

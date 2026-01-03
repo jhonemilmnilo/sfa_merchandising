@@ -7,8 +7,10 @@ import "api_config.dart";
 class UserApi {
   const UserApi();
 
-  /// Fetch all users (useful for initial sync / caching).
-  /// Expected response: { "data": [ {..user..}, ... ] }
+  static String _normEmail(String v) => v.trim().toLowerCase();
+
+  /// Fetch all users (useful for initial sync/caching).
+  /// Directus response: { "data": [ ... ] }
   Future<List<AppUser>> fetchUsers() async {
     final uri = Uri.parse(ApiConfig.users());
 
@@ -22,7 +24,6 @@ class UserApi {
     }
 
     final decoded = jsonDecode(res.body);
-
     if (decoded is! Map<String, dynamic>) {
       throw Exception("Invalid response format: expected JSON object.");
     }
@@ -33,20 +34,15 @@ class UserApi {
     }
 
     return data
-        .map((e) => AppUser.fromJson(Map<String, dynamic>.from(e as Map)))
+        .whereType<Map>()
+        .map((e) => AppUser.fromJson(Map<String, dynamic>.from(e)))
         .toList();
   }
 
-  /// Fetch one user by email (recommended for login online-first).
-  /// This assumes your backend supports filtering via query params.
-  ///
-  /// If your backend does NOT support this filter syntax, tell me what query
-  /// format it expects and I’ll adjust it.
+  /// Fetch one user by email (Directus filter).
   Future<AppUser?> fetchUserByEmail(String email) async {
     final safeEmail = email.trim();
 
-    // Common "items" filter styles:
-    // Option A (Directus-like): ?filter[user_email][_eq]=...
     final uri = Uri.parse(ApiConfig.users()).replace(queryParameters: {
       "filter[user_email][_eq]": safeEmail,
       "limit": "1",
@@ -62,7 +58,6 @@ class UserApi {
     }
 
     final decoded = jsonDecode(res.body);
-
     if (decoded is! Map<String, dynamic>) {
       throw Exception("Invalid response format: expected JSON object.");
     }
@@ -78,17 +73,20 @@ class UserApi {
     return AppUser.fromJson(first);
   }
 
-  /// Online auth (prototype): fetch user by email then compare password.
-  /// Later: replace with server-side auth/token.
+  /// Online auth (prototype): fetch by email, then compare password.
+  /// Later replace with Directus Auth / token-based login.
   Future<AppUser?> authenticateOnline({
     required String email,
     required String password,
   }) async {
-    final user = await fetchUserByEmail(email);
+    final e = _normEmail(email);
+    final p = password.trim();
+
+    final user = await fetchUserByEmail(e);
     if (user == null) return null;
 
     // Prototype only: plaintext compare
-    if (user.password != password) return null;
+    if (user.password.trim() != p) return null;
 
     return user;
   }

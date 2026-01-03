@@ -17,7 +17,7 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final textStyles = Theme.of(context).textTheme;
+    // final textStyles = Theme.of(context).textTheme;
     
     // Get current route to highlight the active menu item
     final String currentRoute = GoRouterState.of(context).uri.path;

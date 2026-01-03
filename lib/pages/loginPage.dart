@@ -7,6 +7,10 @@ import 'package:go_router/go_router.dart';
 // Imports your app-wide theme constants (spacing, colors, typography)
 import 'package:sfa_merchandising/theme.dart';
 
+import 'package:sfa_merchandising/nav.dart'; // AppRoutes
+import 'package:sfa_merchandising/data/auth/auth_repository.dart';
+
+
 /// Modern, professional login page with elegant design
 /// Uses animations, form validation, and clean UI architecture
 class LoginPage extends StatefulWidget {
@@ -75,41 +79,40 @@ class _LoginPageState extends State<LoginPage>
   }
 
   // Handles login logic and validation
-  Future<void> _handleLogin() async {
-    // Gets the current form state
+   Future<void> _handleLogin() async {
     final form = _formKey.currentState;
-
-    // Safety check: form might not be mounted
     if (form == null) return;
 
-    // Dismisses keyboard when user submits
     FocusScope.of(context).unfocus();
-
-    // Stops execution if validation fails
     if (!form.validate()) return;
 
-    // Shows loading indicator
     setState(() => _isLoading = true);
 
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
     try {
-      // Simulated login delay (replace with API call later)
-      await Future.delayed(const Duration(seconds: 1));
+      final repo = AuthRepository();
+      final user = await repo.login(email: email, password: password);
 
-      // Prevents navigation if widget is already disposed
       if (!mounted) return;
 
-      // Navigates to dashboard and clears login from back stack
-      context.go("/dashboard");
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Invalid email or password.")),
+        );
+        return;
+      }
+
+      // Success (online or offline fallback happened automatically)
+      context.go(AppRoutes.dashboard);
     } catch (e) {
-      // Safety check again before showing UI feedback
       if (!mounted) return;
 
-      // Displays error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Login failed: $e")),
       );
     } finally {
-      // Ensures loading state is reset
       if (mounted) setState(() => _isLoading = false);
     }
   }

@@ -1,7 +1,10 @@
 import "package:flutter/material.dart";
 import "package:sfa_merchandising/widgets/app_bottom_nav.dart";
-import "package:sfa_merchandising/widgets/app_drawer.dart"; // ✅ new shared drawer
+import "package:sfa_merchandising/widgets/app_drawer.dart";
 import "../theme.dart";
+
+// ✅ NEW: inventory store (for Inventory excel view)
+import "package:sfa_merchandising/stores/inventory_store.dart";
 
 class ReportPage extends StatefulWidget {
   const ReportPage({super.key});
@@ -50,34 +53,36 @@ class _ReportPageState extends State<ReportPage> {
     final cs = Theme.of(context).colorScheme;
     final product = _products[_selectedProductIndex];
 
+    final canSave = _soldCtrl.text.trim().isNotEmpty;
+
     return Scaffold(
       backgroundColor: cs.background,
-drawer: const AppDrawer(),
+      drawer: const AppDrawer(),
+
       // ---------------------------------------------------------------------
-      // START: App Bar (Report and Monitoring)
+      // App Bar (Reports & Monitoring) + Drawer + Sync
       // ---------------------------------------------------------------------
       appBar: AppBar(
-  title: const Text("Reports & Monitoring"),
-  leading: Builder(
-    builder: (ctx) => IconButton(
-      icon: const Icon(Icons.menu_rounded),
-      onPressed: () => Scaffold.of(ctx).openDrawer(),
-    ),
-  ),
-  actions: [
-    IconButton(
-      tooltip: "Sync",
-      icon: const Icon(Icons.sync_rounded),
-      onPressed: () {
-        // TODO: trigger offline-first sync (upload pending changes, then pull latest)
-        // Example (later): context.read(syncControllerProvider).sync();
-      },
-    ),
-  ],
-),
-
-      // END: App Bar
-      // ---------------------------------------------------------------------
+        title: const Text("Reports & Monitoring"),
+        leading: Builder(
+          builder: (ctx) => IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            onPressed: () => Scaffold.of(ctx).openDrawer(),
+          ),
+        ),
+        actions: [
+          IconButton(
+            tooltip: "Sync",
+            icon: const Icon(Icons.sync_rounded),
+            onPressed: () {
+              // TODO: offline-first sync controller later
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Sync queued (UI-first).")),
+              );
+            },
+          ),
+        ],
+      ),
 
       body: SafeArea(
         child: ListView(
@@ -89,7 +94,7 @@ drawer: const AppDrawer(),
           ),
           children: [
             // -----------------------------------------------------------------
-            // START: Product Tabs (static chips)
+            // Product Tabs
             // -----------------------------------------------------------------
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -123,24 +128,20 @@ drawer: const AppDrawer(),
                 }),
               ),
             ),
-            // -----------------------------------------------------------------
-            // END: Product Tabs
-            // -----------------------------------------------------------------
 
             const SizedBox(height: AppSpacing.lg),
 
             // -----------------------------------------------------------------
-            // START: Sales Summary Section
+            // Sales Summary
             // -----------------------------------------------------------------
             Text(
-              "Sale in a year",
+              "Sales Summary",
               style: context.textStyles.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w900,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
 
-            // KPI cards (Daily / Monthly / Yearly)
             Row(
               children: [
                 Expanded(
@@ -168,14 +169,11 @@ drawer: const AppDrawer(),
               value: "${product.yearlySales}",
               icon: Icons.assessment_rounded,
             ),
-            // -----------------------------------------------------------------
-            // END: Sales Summary Section
-            // -----------------------------------------------------------------
 
             const SizedBox(height: AppSpacing.lg),
 
             // -----------------------------------------------------------------
-            // START: Product Info Card (name/code + image placeholder)
+            // Product Info
             // -----------------------------------------------------------------
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
@@ -189,7 +187,6 @@ drawer: const AppDrawer(),
               ),
               child: Row(
                 children: [
-                  // Product name + code
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +194,7 @@ drawer: const AppDrawer(),
                         Text(
                           product.name,
                           style: context.textStyles.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w900,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xs),
@@ -210,10 +207,7 @@ drawer: const AppDrawer(),
                       ],
                     ),
                   ),
-
                   const SizedBox(width: AppSpacing.md),
-
-                  // Image placeholder
                   Container(
                     height: 86,
                     width: 110,
@@ -234,19 +228,16 @@ drawer: const AppDrawer(),
                 ],
               ),
             ),
-            // -----------------------------------------------------------------
-            // END: Product Info Card
-            // -----------------------------------------------------------------
 
             const SizedBox(height: AppSpacing.lg),
 
             // -----------------------------------------------------------------
-            // START: Record Today's Sales
+            // Record Today's Sales
             // -----------------------------------------------------------------
             Text(
               "Record Today's Sales",
               style: context.textStyles.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w900,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -267,7 +258,7 @@ drawer: const AppDrawer(),
                   Text(
                     "Total Sold Pieces",
                     style: context.textStyles.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -275,6 +266,7 @@ drawer: const AppDrawer(),
                   TextField(
                     controller: _soldCtrl,
                     keyboardType: TextInputType.number,
+                    onChanged: (_) => setState(() {}), // update canSave state
                     decoration: InputDecoration(
                       hintText: "e.g. 24",
                       prefixIcon: Icon(
@@ -310,7 +302,7 @@ drawer: const AppDrawer(),
                     width: double.infinity,
                     height: 52,
                     child: ElevatedButton(
-                      onPressed: () => _save(context, product),
+                      onPressed: canSave ? () => _save(context, product) : null,
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -319,7 +311,7 @@ drawer: const AppDrawer(),
                       child: Text(
                         "Save",
                         style: context.textStyles.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
                     ),
@@ -327,22 +319,13 @@ drawer: const AppDrawer(),
                 ],
               ),
             ),
-            // -----------------------------------------------------------------
-            // END: Record Today's Sales
-            // -----------------------------------------------------------------
 
             const SizedBox(height: AppSpacing.xl),
           ],
         ),
       ),
 
-      // ---------------------------------------------------------------------
-      // START: Bottom Navigation (shared widget)
-      // ---------------------------------------------------------------------
       bottomNavigationBar: const AppBottomNav(),
-      // ---------------------------------------------------------------------
-      // END: Bottom Navigation
-      // ---------------------------------------------------------------------
     );
   }
 
@@ -357,14 +340,24 @@ drawer: const AppDrawer(),
       return;
     }
 
+    // ✅ Save to Inventory store so Inventory page can show it in excel view
+    inventoryStore.addSaleRecord(
+      productName: product.name,
+      productCode: product.code,
+      date: DateTime.now(),
+      soldPieces: parsed,
+    );
+
+    FocusScope.of(context).unfocus(); // close keyboard
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text("Saved: $parsed sold pieces for ${product.name} (static UI)"),
+        content: Text("Saved: $parsed sold pieces for ${product.name}"),
       ),
     );
 
-    // UI-first: clear input
     _soldCtrl.clear();
+    setState(() {}); // refresh Save button disabled state
   }
 }
 
@@ -481,7 +474,6 @@ class _ReportProduct {
   final String name;
   final String code;
 
-  // Static metrics for the selected product
   final int dailyPieces;
   final int monthlySales;
   final int yearlySales;

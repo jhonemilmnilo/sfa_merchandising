@@ -7,7 +7,10 @@ import "package:sfa_merchandising/pages/my_day_page.dart";
 import "package:sfa_merchandising/pages/report_page.dart";
 import "package:sfa_merchandising/pages/calendar_page.dart";
 import "package:sfa_merchandising/pages/profile_page.dart";
+import "package:sfa_merchandising/pages/inventory_page.dart";
 
+
+  
 /// GoRouter configuration for app navigation
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -110,6 +113,13 @@ class AppRouter {
       // -------------------------------------------------------------------
       // END: Drawer Routes
       // -------------------------------------------------------------------
+GoRoute(
+  path: AppRoutes.inventory,
+  name: "inventory",
+  pageBuilder: (context, state) => const NoTransitionPage(
+    child: InventoryPage(),
+  ),
+),
 
       // -------------------------------------------------------------------
       // START: Future Routes (placeholders so navigation won't crash)
@@ -186,7 +196,8 @@ class AppRoutes {
   static const String audit = "/audit";
   static const String menu = "/menu";
 
-  static const String weeklyReports = "/weekly-reports";
+  static const String inventory = "/inventory";
+
 static const String sales = "/sales";
 static const String callSheet = "/call-sheet";
 

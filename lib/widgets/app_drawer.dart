@@ -1,7 +1,8 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:go_router/go_router.dart";
 import "../theme.dart";
-import "../nav.dart"; // AppRoutes constants
+import "../nav.dart";
 
 class AppDrawer extends StatelessWidget {
   final String name;
@@ -16,214 +17,201 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final textStyles = Theme.of(context).textTheme;
+    
+    // Get current route to highlight the active menu item
+    final String currentRoute = GoRouterState.of(context).uri.path;
 
     return Drawer(
+      backgroundColor: cs.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(AppRadius.xl),
+          bottomRight: Radius.circular(AppRadius.xl),
+        ),
+      ),
       child: SafeArea(
         child: Column(
           children: [
-            // -----------------------------------------------------------------
-            // Header: Avatar + Name + Position + Profile Button
-            // -----------------------------------------------------------------
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.lg,
-                AppSpacing.lg,
-                AppSpacing.md,
-              ),
-              decoration: BoxDecoration(
-                color: cs.surface,
-                border: Border(
-                  bottom: BorderSide(
-                    color: cs.outline.withOpacity(0.14),
-                    width: 1,
-                  ),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Top row: avatar + info
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      _AvatarBadge(
-                        size: 54,
-                        background: cs.primary.withOpacity(0.12),
-                        border: cs.primary.withOpacity(0.22),
-                        iconColor: cs.primary,
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: context.textStyles.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: cs.onSurface,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              position,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: context.textStyles.bodyMedium?.copyWith(
-                                color: cs.onSurfaceVariant,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: AppSpacing.md),
-
-                  // Profile action button (clean, subtle)
-                  SizedBox(
-                    width: double.infinity,
-                    height: 44,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _safeGo(context, AppRoutes.profile),
-                      icon: const Icon(Icons.person_outline_rounded, size: 18),
-                      label: Text(
-                        "Profile",
-                        style: context.textStyles.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: cs.onSurface,
-                        side: BorderSide(color: cs.outline.withOpacity(0.18)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.lg),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            // --- Header Section ---
+            _DrawerHeader(
+              name: name,
+              position: position,
+              onProfileTap: () => _safeGo(context, AppRoutes.profile),
             ),
 
-            // -----------------------------------------------------------------
-            // Menu Items
-            // -----------------------------------------------------------------
+            // --- Menu Items ---
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(AppSpacing.md),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.lg,
+                ),
                 children: [
-                  _SectionLabel(text: "Navigation"),
-
+                  const _SectionLabel(text: "Management"),
                   const SizedBox(height: AppSpacing.sm),
-
-                  _DrawerNavTile(
-                    icon: Icons.insert_chart_outlined_rounded,
-                    label: "Weekly Reports",
-                    onTap: () => _safeGo(context, AppRoutes.weeklyReports),
+                  
+                  _NavTile(
+                    label: "Inventory",
+                    icon: Icons.inventory_2_outlined,
+                    activeIcon: Icons.inventory_2_rounded,
+                    isActive: currentRoute == AppRoutes.inventory,
+                    onTap: () => _safeGo(context, AppRoutes.inventory),
                   ),
-
-                  const SizedBox(height: AppSpacing.xs),
-
-                  _DrawerNavTile(
-                    icon: Icons.shopping_bag_outlined,
-                    label: "Sales",
+                  
+                  _NavTile(
+                    label: "Sales Tracking",
+                    icon: Icons.analytics_outlined,
+                    activeIcon: Icons.analytics_rounded,
+                    isActive: currentRoute == AppRoutes.sales,
                     onTap: () => _safeGo(context, AppRoutes.sales),
                   ),
-
-                  const SizedBox(height: AppSpacing.xs),
-
-                  _DrawerNavTile(
-                    icon: Icons.assignment_outlined,
+                  
+                  _NavTile(
                     label: "Call Sheet",
+                    icon: Icons.assignment_outlined,
+                    activeIcon: Icons.assignment_rounded,
+                    isActive: currentRoute == AppRoutes.callSheet,
                     onTap: () => _safeGo(context, AppRoutes.callSheet),
                   ),
                 ],
               ),
             ),
 
-            // -----------------------------------------------------------------
-            // Bottom: Logout pinned
-            // -----------------------------------------------------------------
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                0,
-                AppSpacing.md,
-                AppSpacing.md,
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: cs.surface,
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
-                  border: Border.all(color: cs.outline.withOpacity(0.14)),
-                ),
-                child: ListTile(
-                  leading: Icon(Icons.logout_rounded, color: cs.error),
-                  title: Text(
-                    "Logout",
-                    style: context.textStyles.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: cs.error,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.of(context).pop(); // close drawer
-                    _safeGo(context, AppRoutes.login);
-                  },
-                ),
-              ),
-            ),
+            // --- Footer / Logout ---
+            _LogoutButton(onTap: () => _safeGo(context, AppRoutes.login)),
           ],
         ),
       ),
     );
   }
 
-  static void _safeGo(BuildContext context, String path) {
-    // close drawer if open
-    Navigator.of(context).pop();
-
+  void _safeGo(BuildContext context, String path) {
+    HapticFeedback.lightImpact();
+    if (Scaffold.of(context).isDrawerOpen) {
+      Navigator.of(context).pop();
+    }
     try {
       context.go(path);
-    } catch (_) {
-      // UI-first: route may not exist yet
+    } catch (e) {
+      debugPrint("Navigation error: $e");
     }
   }
 }
 
-/* ------------------------------ UI Pieces ------------------------------ */
+// -----------------------------------------------------------------------------
+// Sub-Widgets (Private to this file for encapsulation)
+// -----------------------------------------------------------------------------
 
-class _AvatarBadge extends StatelessWidget {
-  final double size;
-  final Color background;
-  final Color border;
-  final Color iconColor;
+class _DrawerHeader extends StatelessWidget {
+  final String name;
+  final String position;
+  final VoidCallback onProfileTap;
 
-  const _AvatarBadge({
-    required this.size,
-    required this.background,
-    required this.border,
-    required this.iconColor,
+  const _DrawerHeader({
+    required this.name,
+    required this.position,
+    required this.onProfileTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Container(
-      height: size,
-      width: size,
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: border),
+        border: Border(
+          bottom: BorderSide(color: cs.outlineVariant.withOpacity(0.5)),
+        ),
       ),
-      child: Icon(Icons.person_rounded, color: iconColor, size: size * 0.58),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: cs.primaryContainer,
+                child: Icon(Icons.person_3_rounded, color: cs.onPrimaryContainer, size: 30),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      position,
+                      style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          FilledButton.tonalIcon(
+            onPressed: onProfileTap,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(double.infinity, 44),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+            ),
+            icon: const Icon(Icons.account_circle_outlined, size: 18),
+            label: const Text("User Profile"),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NavTile extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final IconData activeIcon;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _NavTile({
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+      child: ListTile(
+        onTap: onTap,
+        selected: isActive,
+        selectedTileColor: cs.primaryContainer.withOpacity(0.4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+        leading: Icon(
+          isActive ? activeIcon : icon,
+          color: isActive ? cs.primary : cs.onSurfaceVariant,
+        ),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+            color: isActive ? cs.primary : cs.onSurface,
+            fontSize: 15,
+          ),
+        ),
+        trailing: isActive 
+          ? Icon(Icons.circle, size: 6, color: cs.primary) 
+          : Icon(Icons.chevron_right, size: 18, color: cs.outline),
+      ),
     );
   }
 }
@@ -234,70 +222,50 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Text(
-      text.toUpperCase(),
-      style: context.textStyles.labelMedium?.copyWith(
-        letterSpacing: 0.8,
-        fontWeight: FontWeight.w900,
-        color: cs.onSurfaceVariant,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      child: Text(
+        text.toUpperCase(),
+        style: TextStyle(
+          fontSize: 11,
+          letterSpacing: 1.2,
+          fontWeight: FontWeight.w800,
+          color: Theme.of(context).colorScheme.outline,
+        ),
       ),
     );
   }
 }
 
-class _DrawerNavTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
+class _LogoutButton extends StatelessWidget {
   final VoidCallback onTap;
-
-  const _DrawerNavTile({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
+  const _LogoutButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return Material(
-      color: cs.surface,
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(
-              color: cs.outline.withOpacity(0.14),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: cs.onSurface, size: 22),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Text(
-                  label,
-                  style: context.textStyles.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: cs.onSurface,
-                  ),
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Material(
+        color: cs.errorContainer.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.logout_rounded, color: cs.error, size: 20),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  "Sign Out",
+                  style: TextStyle(color: cs.error, fontWeight: FontWeight.bold),
                 ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: cs.onSurface.withOpacity(0.55),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

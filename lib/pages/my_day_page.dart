@@ -345,6 +345,12 @@ class _TaskCard extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
+                      backgroundColor: cs.primary,
+      foregroundColor: cs.onPrimary,
+
+      // Disabled (when onPressed == null)
+      disabledBackgroundColor: cs.surfaceContainerHighest.withOpacity(0.6),
+      disabledForegroundColor: cs.onSurfaceVariant.withOpacity(0.7),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
@@ -357,7 +363,8 @@ class _TaskCard extends StatelessWidget {
                 ? "Ready to submit."
                 : "Capture both Before and After to enable Submit.",
             style: context.textStyles.bodySmall?.copyWith(
-              color: cs.onSurfaceVariant,
+              color: canSubmit ? cs.primary : cs.onSurfaceVariant,
+    fontWeight: FontWeight.w600,
             ),
           ),
         ],

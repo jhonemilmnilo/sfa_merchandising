@@ -1,71 +1,116 @@
+// lib/pages/my_day_page.dart
+import "dart:io";
+
 import "package:flutter/material.dart";
+import "package:image_picker/image_picker.dart";
+
 import "package:sfa_merchandising/widgets/app_bottom_nav.dart";
-import "package:sfa_merchandising/widgets/app_drawer.dart"; // ✅ new shared drawer
+import "package:sfa_merchandising/widgets/app_drawer.dart";
 import "../theme.dart";
 
-class MyDayPage extends StatelessWidget {
+class MyDayPage extends StatefulWidget {
   const MyDayPage({super.key});
+
+  @override
+  State<MyDayPage> createState() => _MyDayPageState();
+}
+
+class _MyDayPageState extends State<MyDayPage> {
+  final _picker = ImagePicker();
+
+  // v0: single store, single task
+  final _storeName = "COSTSAVER'S SUPERMARKET, INC";
+  final _storeAddress = "Biday, San Fernando City, La Union";
+  final _taskName = "Prepare and update sales proposals";
+
+  // captured images (camera)
+  XFile? _before;
+  XFile? _after;
+
+  bool _syncing = false;
+
+  bool get _canSubmit => _before != null && _after != null;
+
+  Future<void> _captureBefore() async {
+    final file = await _captureFromCamera();
+    if (!mounted) return;
+    if (file != null) setState(() => _before = file);
+  }
+
+  Future<void> _captureAfter() async {
+    final file = await _captureFromCamera();
+    if (!mounted) return;
+    if (file != null) setState(() => _after = file);
+  }
+
+  Future<XFile?> _captureFromCamera() async {
+    try {
+      return await _picker.pickImage(
+        source: ImageSource.camera,
+        preferredCameraDevice: CameraDevice.rear,
+        imageQuality: 82, // compress a bit (offline-first friendly)
+      );
+    } catch (e) {
+      if (!mounted) return null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Camera error: $e")),
+      );
+      return null;
+    }
+  }
+
+  Future<void> _onSubmit() async {
+    if (!_canSubmit) return;
+
+    // v0: local-only action (later: offline queue + upload)
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Submitted: $_taskName (local v0)")),
+    );
+  }
+
+  Future<void> _onSync() async {
+    setState(() => _syncing = true);
+    try {
+      // v0 placeholder
+      await Future.delayed(const Duration(milliseconds: 700));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Sync placeholder (v0).")),
+      );
+    } finally {
+      if (mounted) setState(() => _syncing = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    // ---------------------------------------------------------------------
-    // START: Mock Data (UI-first)
-    // One Store -> many Tasks
-    // ---------------------------------------------------------------------
-    final stores = <_MyDayStore>[
-      _MyDayStore(
-        storeName: "ABC Pharmacy",
-        address: "123 Main St, Barangay Sampaloc, Manila",
-        tasks: const [
-          _MyDayTask(taskName: "Planogram Compliance"),
-          _MyDayTask(taskName: "Price Check"),
-          _MyDayTask(taskName: "Display Compliance"),
-        ],
-      ),
-      _MyDayStore(
-        storeName: "HealthPlus Drugstore",
-        address: "Unit 4, Market Road, Quezon City",
-        tasks: const [
-          _MyDayTask(taskName: "Planogram Compliance"),
-          _MyDayTask(taskName: "OOS Check"),
-        ],
-      ),
-    ];
-    // ---------------------------------------------------------------------
-    // END: Mock Data
-    // ---------------------------------------------------------------------
-
     return Scaffold(
       backgroundColor: cs.background,
-drawer: const AppDrawer(),
-      // ---------------------------------------------------------------------
-      // START: App Bar
-      // ---------------------------------------------------------------------
-appBar: AppBar(
-  title: const Text("My Day"),
-  leading: Builder(
-    builder: (ctx) => IconButton(
-      icon: const Icon(Icons.menu_rounded),
-      onPressed: () => Scaffold.of(ctx).openDrawer(),
-    ),
-  ),
-  actions: [
-    IconButton(
-      tooltip: "Sync",
-      icon: const Icon(Icons.sync_rounded),
-      onPressed: () {
-        // TODO: trigger offline-first sync (upload pending changes, then pull latest)
-        // Example (later): context.read(syncControllerProvider).sync();
-      },
-    ),
-  ],
-),
-
-      // END: App Bar
-      // ---------------------------------------------------------------------
-
+      drawer: const AppDrawer(),
+      appBar: AppBar(
+        title: const Text("My Day"),
+        leading: Builder(
+          builder: (ctx) => IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            onPressed: () => Scaffold.of(ctx).openDrawer(),
+          ),
+        ),
+        actions: [
+          IconButton(
+            tooltip: "Sync",
+            icon: _syncing
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync_rounded),
+            onPressed: _syncing ? null : _onSync,
+          ),
+        ],
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(
@@ -75,9 +120,6 @@ appBar: AppBar(
             AppSpacing.xl,
           ),
           children: [
-            // -----------------------------------------------------------------
-            // START: Page Title Section
-            // -----------------------------------------------------------------
             Text(
               "Task for Today",
               style: context.textStyles.headlineSmall?.copyWith(
@@ -86,154 +128,144 @@ appBar: AppBar(
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              "Complete your store tasks and submit before end of day.",
+              "Complete your store task and submit before end of day.",
               style: context.textStyles.bodyMedium?.copyWith(
                 color: cs.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            // -----------------------------------------------------------------
-            // END: Page Title Section
-            // -----------------------------------------------------------------
 
-            // -----------------------------------------------------------------
-            // START: Store Sections (each store header outside, tasks inside)
-            // -----------------------------------------------------------------
-            for (final store in stores) ...[
-              _StoreSection(store: store),
-              const SizedBox(height: AppSpacing.lg),
-            ],
-            // -----------------------------------------------------------------
-            // END: Store Sections
-            // -----------------------------------------------------------------
+            // Store header
+            _StoreHeader(
+              storeName: _storeName,
+              address: _storeAddress,
+              taskCountText: "1 task",
+            ),
+
+            const SizedBox(height: AppSpacing.md),
+
+            // Task card
+            _TaskCard(
+              taskName: _taskName,
+              planogramAssetPath: "assets/images/shelves-3d-rendered-product-displays-on-supermarket_9774954.jpg!bw700",
+              beforeFile: _before,
+              afterFile: _after,
+              onCaptureBefore: _captureBefore,
+              onCaptureAfter: _captureAfter,
+              onClearBefore: _before == null ? null : () => setState(() => _before = null),
+              onClearAfter: _after == null ? null : () => setState(() => _after = null),
+              canSubmit: _canSubmit,
+              onSubmit: _onSubmit,
+            ),
           ],
         ),
       ),
-
-      // ---------------------------------------------------------------------
-      // START: Bottom Navigation (shared widget)
-      // ---------------------------------------------------------------------
       bottomNavigationBar: const AppBottomNav(),
-      // ---------------------------------------------------------------------
-      // END: Bottom Navigation
-      // ---------------------------------------------------------------------
     );
   }
 }
 
-/* ------------------------------ Store Section ------------------------------ */
+/* -------------------------------------------------------------------------- */
+/*                                   Widgets                                  */
+/* -------------------------------------------------------------------------- */
 
-class _StoreSection extends StatelessWidget {
-  final _MyDayStore store;
+class _StoreHeader extends StatelessWidget {
+  final String storeName;
+  final String address;
+  final String taskCountText;
 
-  const _StoreSection({required this.store});
+  const _StoreHeader({
+    required this.storeName,
+    required this.address,
+    required this.taskCountText,
+  });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // -------------------------------------------------------------------
-        // START: Store Header (outside the task cards)
-        // -------------------------------------------------------------------
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(
-              color: cs.outline.withOpacity(0.18),
-              width: 1,
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: cs.outline.withOpacity(0.18),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  storeName,
+                  style: context.textStyles.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  address,
+                  style: context.textStyles.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  taskCountText,
+                  style: context.textStyles.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Store identity
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      store.storeName,
-                      style: context.textStyles.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: cs.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      store.address,
-                      style: context.textStyles.bodyMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      "${store.tasks.length} task(s)",
-                      style: context.textStyles.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Optional chip/status for the store
-              const SizedBox(width: AppSpacing.sm),
-              const _Chip(label: "Today", icon: Icons.today_rounded),
-            ],
-          ),
-        ),
-        // -------------------------------------------------------------------
-        // END: Store Header
-        // -------------------------------------------------------------------
-
-        const SizedBox(height: AppSpacing.md),
-
-        // -------------------------------------------------------------------
-        // START: Tasks for this store
-        // -------------------------------------------------------------------
-        for (final task in store.tasks) ...[
-          _TaskCard(task: task),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(width: AppSpacing.sm),
+          const _Chip(label: "Today", icon: Icons.today_rounded),
         ],
-        // -------------------------------------------------------------------
-        // END: Tasks for this store
-        // -------------------------------------------------------------------
-      ],
+      ),
     );
   }
 }
 
-/* ------------------------------ Task Card ------------------------------ */
+class _TaskCard extends StatelessWidget {
+  final String taskName;
 
-class _TaskCard extends StatefulWidget {
-  final _MyDayTask task;
+  final String planogramAssetPath;
 
-  const _TaskCard({required this.task});
+  final XFile? beforeFile;
+  final XFile? afterFile;
 
-  @override
-  State<_TaskCard> createState() => _TaskCardState();
-}
+  final VoidCallback onCaptureBefore;
+  final VoidCallback onCaptureAfter;
+  final VoidCallback? onClearBefore;
+  final VoidCallback? onClearAfter;
 
-class _TaskCardState extends State<_TaskCard> {
-  // Static placeholders for now (later: store image file paths)
-  bool _beforeCaptured = false;
-  bool _afterCaptured = false;
+  final bool canSubmit;
+  final VoidCallback onSubmit;
 
-  bool get _canSubmit => _beforeCaptured && _afterCaptured;
+  const _TaskCard({
+    required this.taskName,
+    required this.planogramAssetPath,
+    required this.beforeFile,
+    required this.afterFile,
+    required this.onCaptureBefore,
+    required this.onCaptureAfter,
+    required this.onClearBefore,
+    required this.onClearAfter,
+    required this.canSubmit,
+    required this.onSubmit,
+  });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    // ---------------------------------------------------------------------
-    // START: Task Card Container
-    // ---------------------------------------------------------------------
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -247,15 +279,12 @@ class _TaskCardState extends State<_TaskCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ---------------------------------------------------------------
-          // START: Task Header (task name + status chip)
-          // ---------------------------------------------------------------
+          // Header (name + status)
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Text(
-                  widget.task.taskName,
+                  taskName,
                   style: context.textStyles.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -265,85 +294,49 @@ class _TaskCardState extends State<_TaskCard> {
               const _Chip(label: "Pending", icon: Icons.schedule_rounded),
             ],
           ),
-          // ---------------------------------------------------------------
-          // END: Task Header
-          // ---------------------------------------------------------------
-
           const SizedBox(height: AppSpacing.sm),
 
-          // ---------------------------------------------------------------
-          // START: Planogram Section
-          // ---------------------------------------------------------------
+          // Planogram reference image
           _ImageBlock(
             title: "Planogram",
-            subtitle: "Reference image (static placeholder)",
-            height: 150,
-            child: Center(
-              child: Icon(
-                Icons.image_outlined,
-                size: 42,
-                color: cs.onSurface.withOpacity(0.45),
-              ),
-            ),
+            subtitle: "Reference image",
+            height: 170,
+            child: _PlanogramPreview(assetPath: planogramAssetPath),
           ),
-          // ---------------------------------------------------------------
-          // END: Planogram Section
-          // ---------------------------------------------------------------
 
           const SizedBox(height: AppSpacing.md),
 
-          // ---------------------------------------------------------------
-          // START: Before/After Capture Section
-          // ---------------------------------------------------------------
+          // Before/After
           Row(
             children: [
               Expanded(
                 child: _CaptureTile(
                   label: "Before",
-                  captured: _beforeCaptured,
-                  onTap: () => setState(() => _beforeCaptured = true),
-                  onClear: _beforeCaptured
-                      ? () => setState(() => _beforeCaptured = false)
-                      : null,
+                  file: beforeFile,
+                  onTap: onCaptureBefore,
+                  onClear: onClearBefore,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: _CaptureTile(
                   label: "After",
-                  captured: _afterCaptured,
-                  onTap: () => setState(() => _afterCaptured = true),
-                  onClear: _afterCaptured
-                      ? () => setState(() => _afterCaptured = false)
-                      : null,
+                  file: afterFile,
+                  onTap: onCaptureAfter,
+                  onClear: onClearAfter,
                 ),
               ),
             ],
           ),
-          // ---------------------------------------------------------------
-          // END: Before/After Capture Section
-          // ---------------------------------------------------------------
 
           const SizedBox(height: AppSpacing.md),
 
-          // ---------------------------------------------------------------
-          // START: Submit Button Section
-          // ---------------------------------------------------------------
+          // Submit
           SizedBox(
             width: double.infinity,
             height: 52,
             child: ElevatedButton.icon(
-              onPressed: _canSubmit
-                  ? () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            "Submitted: ${widget.task.taskName} (static UI)",
-                          ),
-                        ),
-                      );
-                    }
-                  : null,
+              onPressed: canSubmit ? onSubmit : null,
               icon: const Icon(Icons.check_circle_rounded),
               label: Text(
                 "Submit",
@@ -360,38 +353,52 @@ class _TaskCardState extends State<_TaskCard> {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            _canSubmit
+            canSubmit
                 ? "Ready to submit."
                 : "Capture both Before and After to enable Submit.",
             style: context.textStyles.bodySmall?.copyWith(
               color: cs.onSurfaceVariant,
             ),
           ),
-          // ---------------------------------------------------------------
-          // END: Submit Button Section
-          // ---------------------------------------------------------------
         ],
       ),
     );
-    // ---------------------------------------------------------------------
-    // END: Task Card Container
-    // ---------------------------------------------------------------------
   }
 }
 
-/* ------------------------------ UI bits ------------------------------ */
+class _PlanogramPreview extends StatelessWidget {
+  final String assetPath;
+  const _PlanogramPreview({required this.assetPath});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => showDialog(
+        context: context,
+        builder: (_) => Dialog(
+          insetPadding: const EdgeInsets.all(AppSpacing.md),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            child: InteractiveViewer(
+              child: Image.asset(assetPath, fit: BoxFit.contain),
+            ),
+          ),
+        ),
+      ),
+      child: Image.asset(assetPath, fit: BoxFit.cover),
+    );
+  }
+}
 
 class _Chip extends StatelessWidget {
   final String label;
   final IconData icon;
-
   const _Chip({required this.label, required this.icon});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    // START: Chip Container
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
@@ -420,7 +427,6 @@ class _Chip extends StatelessWidget {
         ],
       ),
     );
-    // END: Chip Container
   }
 }
 
@@ -441,7 +447,6 @@ class _ImageBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    // START: Image Block Container
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -477,19 +482,18 @@ class _ImageBlock extends StatelessWidget {
         ),
       ],
     );
-    // END: Image Block Container
   }
 }
 
 class _CaptureTile extends StatelessWidget {
   final String label;
-  final bool captured;
+  final XFile? file;
   final VoidCallback onTap;
   final VoidCallback? onClear;
 
   const _CaptureTile({
     required this.label,
-    required this.captured,
+    required this.file,
     required this.onTap,
     this.onClear,
   });
@@ -498,12 +502,13 @@ class _CaptureTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    // START: Capture Tile Container
+    final hasImage = file != null;
+
     return InkWell(
       borderRadius: BorderRadius.circular(AppRadius.lg),
       onTap: onTap,
       child: Container(
-        height: 140,
+        height: 150,
         padding: const EdgeInsets.all(AppSpacing.sm),
         decoration: BoxDecoration(
           color: cs.surfaceContainerHighest.withOpacity(0.25),
@@ -515,30 +520,38 @@ class _CaptureTile extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            // START: Capture Tile Main Content
+            // Main content
             Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    captured ? Icons.photo_rounded : Icons.add_a_photo_rounded,
-                    size: 36,
-                    color: cs.onSurface.withOpacity(0.60),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    captured ? "$label Captured" : "Capture $label",
-                    style: context.textStyles.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: cs.onSurface,
+              child: hasImage
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      child: Image.file(
+                        File(file!.path),
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
+                    )
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.add_a_photo_rounded,
+                          size: 36,
+                          color: cs.onSurface.withOpacity(0.60),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          "Capture $label",
+                          style: context.textStyles.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
             ),
-            // END: Capture Tile Main Content
 
-            // START: Top-left Label Tag
+            // Label tag
             Align(
               alignment: Alignment.topLeft,
               child: Container(
@@ -547,7 +560,7 @@ class _CaptureTile extends StatelessWidget {
                   vertical: AppSpacing.xs,
                 ),
                 decoration: BoxDecoration(
-                  color: cs.surface.withOpacity(0.9),
+                  color: cs.surface.withOpacity(0.92),
                   borderRadius: BorderRadius.circular(AppRadius.md),
                   border: Border.all(
                     color: cs.outline.withOpacity(0.16),
@@ -562,9 +575,8 @@ class _CaptureTile extends StatelessWidget {
                 ),
               ),
             ),
-            // END: Top-left Label Tag
 
-            // START: Clear Button
+            // Clear button
             if (onClear != null)
               Align(
                 alignment: Alignment.topRight,
@@ -574,53 +586,36 @@ class _CaptureTile extends StatelessWidget {
                   icon: Icon(Icons.close_rounded, color: cs.onSurface),
                 ),
               ),
-            // END: Clear Button
 
-            // START: Plus Badge
-            if (!captured)
+            // Bottom “tap to retake” hint when image exists
+            if (hasImage)
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Container(
-                  height: 34,
-                  width: 60,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
                   decoration: BoxDecoration(
-                    color: cs.surface,
+                    color: cs.surface.withOpacity(0.92),
                     borderRadius: BorderRadius.circular(AppRadius.lg),
                     border: Border.all(
                       color: cs.outline.withOpacity(0.16),
                       width: 1,
                     ),
                   ),
-                  child: Icon(Icons.add_rounded, color: cs.onSurface),
+                  child: Text(
+                    "Tap to retake",
+                    style: context.textStyles.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: cs.onSurface,
+                    ),
+                  ),
                 ),
               ),
-            // END: Plus Badge
           ],
         ),
       ),
     );
-    // END: Capture Tile Container
   }
-}
-
-/* ------------------------------ Models ------------------------------ */
-
-class _MyDayStore {
-  final String storeName;
-  final String address;
-  final List<_MyDayTask> tasks;
-
-  const _MyDayStore({
-    required this.storeName,
-    required this.address,
-    required this.tasks,
-  });
-}
-
-class _MyDayTask {
-  final String taskName;
-
-  const _MyDayTask({
-    required this.taskName,
-  });
 }

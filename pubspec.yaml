@@ -19,6 +19,7 @@ dependencies:
   sqflite: ^2.3.3+1
   path: ^1.9.0
   path_provider: ^2.1.4
+  image_picker: ^1.0.7
 
 dev_dependencies:
   flutter_test:
@@ -28,6 +29,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+   - assets/images/shelves-3d-rendered-product-displays-on-supermarket_9774954.jpg!bw700
 
 flutter_launcher_icons:
   android: true

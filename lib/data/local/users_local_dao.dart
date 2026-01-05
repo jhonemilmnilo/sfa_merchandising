@@ -64,6 +64,22 @@ class UsersLocalDao {
     return AppUser.fromJson(rows.first);
   }
 
+  /// Fetch cached user by user_id.
+  /// This is what the Profile page will use (via AuthSession.userId).
+  Future<AppUser?> getById(int userId) async {
+    final db = await _db;
+
+    final rows = await db.query(
+      "users",
+      where: "user_id = ?",
+      whereArgs: [userId],
+      limit: 1,
+    );
+
+    if (rows.isEmpty) return null;
+    return AppUser.fromJson(rows.first);
+  }
+
   /// Offline login check (prototype): email + password must match cached row.
   Future<AppUser?> authenticateOffline({
     required String email,
@@ -74,7 +90,7 @@ class UsersLocalDao {
     final rows = await db.query(
       "users",
       where: "user_email = ? AND user_password = ?",
-      whereArgs: [_normEmail(email), password],
+      whereArgs: [_normEmail(email), password.trim()],
       limit: 1,
     );
 

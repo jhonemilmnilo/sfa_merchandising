@@ -9,6 +9,8 @@ import 'package:sfa_merchandising/theme.dart';
 
 import 'package:sfa_merchandising/nav.dart'; // AppRoutes
 import 'package:sfa_merchandising/data/auth/auth_repository.dart';
+import "package:sfa_merchandising/state/auth_session.dart";
+
 
 
 /// Modern, professional login page with elegant design
@@ -29,6 +31,8 @@ class _LoginPageState extends State<LoginPage>
 
   // Global key used to validate and save the form state
   final _formKey = GlobalKey<FormState>();
+
+
 
   // Controller for reading and modifying email input
   final _emailController = TextEditingController();
@@ -81,6 +85,7 @@ class _LoginPageState extends State<LoginPage>
   // Handles login logic and validation
    Future<void> _handleLogin() async {
     final form = _formKey.currentState;
+    
     if (form == null) return;
 
     FocusScope.of(context).unfocus();
@@ -88,11 +93,14 @@ class _LoginPageState extends State<LoginPage>
 
     setState(() => _isLoading = true);
 
-    final email = _emailController.text.trim();
+   final email = _emailController.text.trim().toLowerCase();
+
+    
     final password = _passwordController.text.trim();
 
     try {
       final repo = AuthRepository();
+      
       final user = await repo.login(email: email, password: password);
 
       if (!mounted) return;
@@ -105,7 +113,10 @@ class _LoginPageState extends State<LoginPage>
       }
 
       // Success (online or offline fallback happened automatically)
-      context.go(AppRoutes.dashboard);
+     // Success (online or offline fallback happened automatically)
+        AuthSession.instance.setUser(user);
+        context.go(AppRoutes.dashboard);
+
     } catch (e) {
       if (!mounted) return;
 

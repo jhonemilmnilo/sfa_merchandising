@@ -34,7 +34,7 @@ class AppDrawer extends StatelessWidget {
           valueListenable: AuthSession.instance.currentUser,
           builder: (context, user, _) {
             final headerName = _displayName(user);
-            final headerPosition = user?.position?.trim().isNotEmpty == true
+            final headerPosition = user?.position.trim().isNotEmpty == true
                 ? user!.position.trim()
                 : "Field Merchandiser";
 

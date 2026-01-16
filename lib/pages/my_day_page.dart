@@ -363,8 +363,7 @@ class _TaskCard extends StatelessWidget {
                 ? "Ready to submit."
                 : "Capture both Before and After to enable Submit.",
             style: context.textStyles.bodySmall?.copyWith(
-              color: canSubmit ? cs.primary : cs.onSurfaceVariant,
-    fontWeight: FontWeight.w600,
+              color: cs.primary,
             ),
           ),
         ],
